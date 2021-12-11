@@ -1,12 +1,21 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
+using System.Threading;
+using Server.Session;
 using ServerCore;
 
 namespace Server
 {
     class Program
     {
-        static Listener _listener = new Listener();
-        public static GameRoom Room = new GameRoom();
+        private static readonly Listener Listener = new();
+        public static GameRoom room = new();
+
+        static void FlushRoom()
+        {
+            room.Push(() => room.Flush());
+            JobTimer.Instance.Push(FlushRoom, 250);
+        }
 
         static void Main(string[] args)
         {
@@ -16,8 +25,15 @@ namespace Server
             var ipAddress = ipHost.AddressList[0];
             var ipEndPoint = new IPEndPoint(ipAddress, 7777);
 
-            _listener.Start(ipEndPoint, () => { return SessionManager.Instance.Generate(); });
-            while (true) {; }
+            Listener.Start(ipEndPoint, () => SessionManager.Instance.Generate());
+            Console.WriteLine("Listening...");
+
+            JobTimer.Instance.Push(FlushRoom);
+
+            while (true)
+            {
+                JobTimer.Instance.Flush();
+            }
         }
     }
 }

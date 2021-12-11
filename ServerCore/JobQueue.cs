@@ -13,13 +13,14 @@ namespace ServerCore
 
     public class JobQueue : IJobQueue
     {
-        private Queue<Action> _jobQueue = new Queue<Action>();
-        private object _lock = new object();
-        private bool _flush = false;
+        private readonly Queue<Action> _jobQueue = new();
+        private readonly object _lock = new();
+        private bool _flush;
 
         public void Push(Action job)
         {
-            bool flush = false;
+            var flush = false;
+
             lock (_lock)
             {
                 _jobQueue.Enqueue(job);
@@ -39,7 +40,7 @@ namespace ServerCore
         {
             while (true)
             {
-                Action action = Pop();
+                var action = Pop();
                 if (action == null)
                 {
                     return;
@@ -53,15 +54,13 @@ namespace ServerCore
         {
             lock (_lock)
             {
-                if (_jobQueue.Count == 0)
-                {
-                    _flush = false;
-                    return null;
-                }
-                else
+                if (_jobQueue.Count != 0)
                 {
                     return _jobQueue.Dequeue();
                 }
+
+                _flush = false;
+                return null;
             }
         }
     }

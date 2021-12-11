@@ -8,17 +8,19 @@ namespace DummyClient
 {
     class SessionManager
     {
-        static SessionManager _session = new SessionManager();
-        public static SessionManager Instance => _session;
+        public static readonly SessionManager Session = new();
+        public static SessionManager Instance => Session;
 
-        private List<ServerSession> _sessions = new List<ServerSession>();
-        private object _lock = new object();
+        private readonly List<ServerSession> _sessions = new();
+        private readonly object _lock = new();
+
+        private readonly Random _rand = new();
 
         public ServerSession Generate()
         {
             lock (_lock)
             {
-                ServerSession session = new ServerSession();
+                var session = new ServerSession();
                 _sessions.Add(session);
                 return session;
             }
@@ -30,11 +32,13 @@ namespace DummyClient
             {
                 foreach (var serverSession in _sessions)
                 {
-                    C_Chat chatPacket = new C_Chat();
-                    chatPacket.chat = $"Hello Server !";
-                    ArraySegment<byte> segment = chatPacket.Write();
-
-                    serverSession.Send(segment);
+                    var move = new C_Move
+                    {
+                        posX = _rand.Next(-50, 50),
+                        posY = 0.0f,
+                        posZ = _rand.Next(-50,50),
+                    };
+                    serverSession.Send(move.Write());
                 }
             }
         }

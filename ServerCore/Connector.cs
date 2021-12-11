@@ -10,12 +10,12 @@ namespace ServerCore
 
         public void Connect(IPEndPoint endPoint, Func<PacketSession> sessionFactory, int count = 1)
         {
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
-                Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 _sessionFactory += sessionFactory;
 
-                SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+                var args = new SocketAsyncEventArgs();
                 args.Completed += OnConnectCompleted;
                 args.RemoteEndPoint = endPoint;
                 args.UserToken = socket;
@@ -26,11 +26,10 @@ namespace ServerCore
 
         private void RegisterConnect(SocketAsyncEventArgs args)
         {
-            Socket socket = args.UserToken as Socket;
-            if (socket == null)
+            if (args.UserToken is not Socket socket)
                 return;
 
-            bool pending = socket.ConnectAsync(args);
+            var pending = socket.ConnectAsync(args);
             if (pending == false)
             {
                 OnConnectCompleted(null, args);
@@ -41,7 +40,7 @@ namespace ServerCore
         {
             if (args.SocketError == SocketError.Success)
             {
-                PacketSession session = _sessionFactory.Invoke();
+                var session = _sessionFactory.Invoke();
                 session.Start(args.ConnectSocket);
                 session.OnConnected(args.RemoteEndPoint);
             }

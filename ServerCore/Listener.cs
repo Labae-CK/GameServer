@@ -13,7 +13,7 @@ namespace ServerCore
         private Socket _listenSocket;
         private Func<PacketSession> _sessionFactory;
 
-        public void Start(IPEndPoint endPoint, Func<PacketSession> sessionFactory, int register = 10, int backlog = 10)
+        public void Start(IPEndPoint endPoint, Func<PacketSession> sessionFactory, int register = 10, int backlog = 100)
         {
             // Create listen socket.
             _listenSocket = new Socket(endPoint.AddressFamily,
@@ -42,7 +42,7 @@ namespace ServerCore
         {
             args.AcceptSocket = null;
 
-            bool pending = _listenSocket.AcceptAsync(args);
+            var pending = _listenSocket.AcceptAsync(args);
             if (pending == false)
             {
                 OnAcceptCompleted(null, args);
@@ -53,9 +53,16 @@ namespace ServerCore
         {
             if (args.SocketError == SocketError.Success)
             {
-                PacketSession session = _sessionFactory.Invoke();
-                session.Start(args.AcceptSocket);
-                session.OnConnected(args.AcceptSocket.RemoteEndPoint);
+                var session = _sessionFactory.Invoke();
+                if (args.AcceptSocket != null)
+                {
+                    session.Start(args.AcceptSocket);
+                    session.OnConnected(args.AcceptSocket.RemoteEndPoint);
+                }
+                else
+                {
+                    Console.WriteLine("AcceptSocket is null");
+                }
             }
             else
             {

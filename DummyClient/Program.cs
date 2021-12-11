@@ -15,10 +15,10 @@ namespace DummyClient
             var ipAddress = ipHost.AddressList[0];
             var ipEndPoint = new IPEndPoint(ipAddress, 7777);
 
-            Connector connector = new Connector();
+            var connector = new Connector();
             connector.Connect(ipEndPoint,
-                () => { return SessionManager.Instance.Generate(); }, 
-                30);
+                () => SessionManager.Instance.Generate(), 
+                10);
 
             while (true)
             {
